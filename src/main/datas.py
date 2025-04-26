@@ -81,3 +81,10 @@ def find_data(file_path):
         if item["file_path"] == file_path:
             return data[index]
     return None
+
+# 按文件路径查找并删除对应数据（取消加密）
+def find_and_delete_data(file_path):
+    data = load_data()
+    for index, item in enumerate(data):
+        if item["file_path"] == file_path:
+            delete_data(index)
