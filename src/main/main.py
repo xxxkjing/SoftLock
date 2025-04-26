@@ -150,8 +150,10 @@ def select_and_encrypt(strategy_id, additional_params):
     datas.add_data(file_path, strategy_id, additional_params)
     lock.encrypt_file(file_path, password_disturbance)
 
-
-
+def select_and_decrypt():
+    file_path=select_file()
+    datas.find_and_delete_data(file_path)
+    lock.decrypt_file(file_path, password_disturbance)
 
 
 def Trigger_password():
@@ -164,8 +166,11 @@ def Trigger_password():
 '''
 目前使用方法：
 
+#select_and_decrypt()
+可以实现选择一个文件，并且永久取消对其的加密
+
 select_and_encrypt(这里填策略编号,这里填附加参数)
-可以实现选择一个文件，并且按照填好的加密方法加密它（目前选择txt或者docx文件会比较稳定）
+可以实现选择一个文件，并且按照填好的加密方法加密它（目前选择txt或者docx文件应该会比较稳定）
 
 Trigger_password()
 运行后选择被加密过的文件，模拟双击被加密文件的情况
@@ -184,3 +189,5 @@ Trigger_password()
 
 #select_and_encrypt(12,7)
 #Trigger_password()
+#select_and_decrypt()
+
