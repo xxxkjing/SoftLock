@@ -10,7 +10,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 
-password_disturbance = 'BIWBGUIWBUI1' # lock的加密密钥是静态的，但我们的密码是动态的，所以取一串固定的随机字符来加密文件
+password_disturbance = 'BIWBGUIWBUI1' # lock的加密密钥是静态的，但我们的密码是动态的，所以取一串固定的随机字符来加密文，之后应该在管理端让用户设置
 
 
 class PasswordApp():
@@ -39,7 +39,7 @@ class PasswordApp():
             border_radius=8,
             filled=True,
             content_padding=10,
-            focused_border_color=ft.colors.BLUE_600,
+            focused_border_color=ft.Colors.BLUE_600,
             password=True,  # 密码模式
             can_reveal_password=True  # 显示明文开关
         )
@@ -50,8 +50,8 @@ class PasswordApp():
             height=40,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=8),
-                bgcolor=ft.colors.BLUE_600,
-                color=ft.colors.WHITE,
+                bgcolor=ft.Colors.BLUE_600,
+                color=ft.Colors.WHITE,
                 elevation={"pressed": 0, "": 2},
                 animation_duration=200
             )
@@ -75,12 +75,12 @@ class PasswordApp():
                 width=500
             ),
             padding=20,
-            bgcolor=ft.colors.WHITE,
+            bgcolor=ft.Colors.WHITE,
             border_radius=12,
             shadow=ft.BoxShadow(
                 spread_radius=1,
                 blur_radius=15,
-                color=ft.colors.BLUE_100
+                color=ft.Colors.BLUE_100
             )
         )
         self.page.add(container)
@@ -104,7 +104,7 @@ class PasswordApp():
         """显示提示信息"""
         snack_bar = ft.SnackBar(
             content=ft.Text(message),
-            bgcolor=ft.colors.RED_300
+            bgcolor=ft.Colors.RED_300
         )
         self.page.open(snack_bar)
         self.page.update()
