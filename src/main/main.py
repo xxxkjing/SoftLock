@@ -8,7 +8,7 @@ import os
 import flet as ft
 import tkinter as tk
 from tkinter import filedialog
-
+import shlex
 
 password_disturbance = 'BIWBGUIWBUI1' # lock的加密密钥是静态的，但我们的密码是动态的，所以取一串固定的随机字符来加密文，之后应该在管理端让用户设置
 
@@ -90,6 +90,7 @@ class PasswordApp():
         if self.text_input.value.strip():
             checker=strategies.PasswordChecker()
             if checker.strategy(datas.find_data(self.target_file_path)["strategy_id"],datas.find_data(self.target_file_path)["additional_params"],self.text_input.value)==True:
+                print(self.target_file_path) # 调试
                 lock.decrypt_file(self.target_file_path, password_disturbance)
                 self.page.window.destroy()
                 self.encrypt_after_close(self.target_file_path, password_disturbance)
@@ -112,16 +113,35 @@ class PasswordApp():
     def encrypt_after_close(self,file_path: str, password: str):
     
         if os.name == 'nt':  # Windows
-            process = subprocess.Popen(['start',file_path], shell=True)
+            process = subprocess.Popen(f'start "" "{file_path}"', shell=True)
         elif os.name == 'posix':  # macOS 和 Linux
             process = subprocess.Popen(['open', file_path])
         
         # 检测文件是否关闭
         while True:
             time.sleep(1)  # 每秒检测一次
+            '''
             if process.poll() is not None:  # 文件已关闭
                 lock.encrypt_file(file_path, password)  # 加密文件
                 break
+                
+            '''
+            try_count = 0
+            if process.poll() is not None:
+            
+                # 连续3次检测到未使用才确认关闭
+                while try_count < 3:
+                    if process.poll() is not None:
+                        try_count += 1
+                        time.sleep(0.5)
+                    else:
+                        break
+                if try_count == 3:
+                    lock.encrypt_file(file_path, password)
+                    break
+
+def create_page(page: ft.Page, target_file_path):
+    app = PasswordApp(page, target_file_path)
 
 def create_page(page: ft.Page, target_file_path):
     app = PasswordApp(page, target_file_path)
@@ -144,6 +164,7 @@ def select_file():
         return file_path
     else:
         return None
+
 
 def select_and_encrypt(strategy_id, additional_params):
     file_path=select_file()
@@ -190,4 +211,3 @@ Trigger_password()
 #select_and_encrypt(12,7)
 #Trigger_password()
 #select_and_decrypt()
-
