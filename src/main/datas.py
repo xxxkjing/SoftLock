@@ -1,8 +1,10 @@
 import json
 import os
 
+
+
 # 数据文件路径
-DATA_FILE = "data.json"
+DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data.json')
 
 # 初始化数据文件
 def initialize_data_file():
