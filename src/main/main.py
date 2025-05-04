@@ -93,9 +93,6 @@ class PasswordApp():
         """提交按钮事件处理"""
         if self.text_input.value.strip():
             checker=strategies.PasswordChecker()
-            # 调试
-            #self._show_snackbar(self.target_file_path=='D:/Zhangzy/临时/高中/杂项内容/研究性学习/test.txt')
-            #self._show_snackbar(datas.find_data(self.target_file_path)==datas.find_data('D:/Zhangzy/临时/高中/杂项内容/研究性学习/test.txt'))
             if checker.strategy(datas.find_data(self.target_file_path)["strategy_id"],datas.find_data(self.target_file_path)["additional_params"],self.text_input.value)==True:
                 lock.decrypt_file(self.target_file_path, password_disturbance)
                 self.page.window.destroy()
@@ -209,7 +206,6 @@ select_and_encrypt(这里填策略编号,这里填附加参数)
 
 
 '''
-#subprocess.Popen(f'start notepad "" "D:\Zhangzy\临时\高中\杂项内容\研究性学习\新建 文本文档.txt"', shell=True)
 
 def main():
     target_file_path= sys.argv[1].replace('\\', '/')
@@ -230,3 +226,4 @@ if __name__ == '__main__':
     #Trigger_password()
     #select_and_decrypt()
     main()
+   
