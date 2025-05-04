@@ -8,8 +8,12 @@ import os
 import flet as ft
 import tkinter as tk
 from tkinter import filedialog
+import sys
 import shlex
 
+
+
+notepad_path = os.path.join(os.environ.get('SYSTEMROOT', r"C:\Windows"), "System32", "notepad.exe") #记事本路径
 password_disturbance = 'BIWBGUIWBUI1' # lock的加密密钥是静态的，但我们的密码是动态的，所以取一串固定的随机字符来加密文，之后应该在管理端让用户设置
 
 
@@ -89,8 +93,10 @@ class PasswordApp():
         """提交按钮事件处理"""
         if self.text_input.value.strip():
             checker=strategies.PasswordChecker()
+            # 调试
+            #self._show_snackbar(self.target_file_path=='D:/Zhangzy/临时/高中/杂项内容/研究性学习/test.txt')
+            #self._show_snackbar(datas.find_data(self.target_file_path)==datas.find_data('D:/Zhangzy/临时/高中/杂项内容/研究性学习/test.txt'))
             if checker.strategy(datas.find_data(self.target_file_path)["strategy_id"],datas.find_data(self.target_file_path)["additional_params"],self.text_input.value)==True:
-                print(self.target_file_path) # 调试
                 lock.decrypt_file(self.target_file_path, password_disturbance)
                 self.page.window.destroy()
                 self.encrypt_after_close(self.target_file_path, password_disturbance)
@@ -113,32 +119,21 @@ class PasswordApp():
     def encrypt_after_close(self,file_path: str, password: str):
     
         if os.name == 'nt':  # Windows
-            process = subprocess.Popen(f'start "" "{file_path}"', shell=True)
+            #process = subprocess.Popen(f'start "" "{file_path}"', shell=True)
+            process = subprocess.Popen(['notepad.exe', file_path])
+
         elif os.name == 'posix':  # macOS 和 Linux
             process = subprocess.Popen(['open', file_path])
         
         # 检测文件是否关闭
         while True:
             time.sleep(1)  # 每秒检测一次
-            '''
-            if process.poll() is not None:  # 文件已关闭
-                lock.encrypt_file(file_path, password)  # 加密文件
-                break
-                
-            '''
             try_count = 0
             if process.poll() is not None:
+                lock.encrypt_file(file_path, password)
+                break
             
-                # 连续3次检测到未使用才确认关闭
-                while try_count < 3:
-                    if process.poll() is not None:
-                        try_count += 1
-                        time.sleep(0.5)
-                    else:
-                        break
-                if try_count == 3:
-                    lock.encrypt_file(file_path, password)
-                    break
+                
 
 def create_page(page: ft.Page, target_file_path):
     app = PasswordApp(page, target_file_path)
@@ -187,27 +182,51 @@ def Trigger_password():
 '''
 目前使用方法：
 
-#select_and_decrypt()
+select_and_decrypt()
 可以实现选择一个文件，并且永久取消对其的加密
 
+加密文件（管理端还没弄目前只能手动这样搞）：
 select_and_encrypt(这里填策略编号,这里填附加参数)
 可以实现选择一个文件，并且按照填好的加密方法加密它（目前选择txt或者docx文件应该会比较稳定）
 
-Trigger_password()
-运行后选择被加密过的文件，模拟双击被加密文件的情况
-输入正确的密码即可解密并打开文件
 
-目前已实现的重要功能：
+**重要主功能：
+找到一个txt文件，选择打开方式，在电脑上查找，选择processing.bat文件
+
+目前实现的重要功能：
+
 加密文件，使其访问时变为乱码
-加密的方式存储在本地的json文件中，可随时更改，删除
+加密的方式存储在本地的json文件中，可随时更改
 输入正确的密码即可解密文件，并自动打开文件
 关闭文件之后自动将文件再加密回去
+双击文件之后自动判断是否加密，如果加密弹出密码框，如果未加密则直接打开
+可应对文件路径里包含空格等特殊字符，其余文件都是用绝对路径
 
-未实现：
-双击文件自动拦截，弹出输入密码框
+为了尽量不修改注册表，所以目前采用此方法实现双击文件自动弹出密码框
+
+待解决的问题：
+双击文件之后会附带弹出cmd提示框，虽然不怎么影响使用，但影响体验，目前无法很好解决
+
 
 '''
+#subprocess.Popen(f'start notepad "" "D:\Zhangzy\临时\高中\杂项内容\研究性学习\新建 文本文档.txt"', shell=True)
 
-#select_and_encrypt(12,7)
-#Trigger_password()
-#select_and_decrypt()
+def main():
+    target_file_path= sys.argv[1].replace('\\', '/')
+    # 修改后会对所有txt影响，所以未加密的txt应该正常打开
+    if datas.find_data(target_file_path)==None:
+        if os.name == 'nt':  # Windows
+            #process = subprocess.Popen(f'start "" "{file_path}"', shell=True)
+            subprocess.Popen(f'start notepad "" "{target_file_path}"', shell=True)
+
+        elif os.name == 'posix':  # macOS 和 Linux
+            process = subprocess.Popen(['open', target_file_path])
+
+    else:
+        ft.app(target=lambda page: create_page(page, target_file_path))
+
+if __name__ == '__main__':
+    #select_and_encrypt(12,7)
+    #Trigger_password()
+    #select_and_decrypt()
+    main()
