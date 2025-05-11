@@ -188,6 +188,7 @@ select_and_encrypt(这里填策略编号,这里填附加参数)
 
 
 找到一个txt文件，选择打开方式，在电脑上查找，选择processing.bat文件
+注意目前processing文件中的Python解释器路径和main文件的路径暂时需要手动填写
 
 
 目前实现的重要功能：
