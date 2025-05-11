@@ -1,0 +1,277 @@
+import flet as ft
+import os
+import tkinter as tk
+from tkinter import filedialog
+import time
+
+class FilePathList:
+    def __init__(self):
+        self.file_paths = []  # 存储文件路径的列表
+
+    def add_path(self, path):
+        """添加文件路径到列表"""
+        if path:  # 确保路径不为空
+            self.file_paths.append({"path": path, "strategy": None, "param": None, "encrypted": False})
+
+    def remove_path(self, path):
+        """从列表中删除指定的文件路径"""
+        self.file_paths = [file for file in self.file_paths if file["path"] != path]
+
+    def toggle_encryption(self, path):
+        """切换指定文件的加密状态"""
+        for file in self.file_paths:
+            if file["path"] == path:
+                file["encrypted"] = not file["encrypted"]
+                break
+
+    def get_file_info(self, path):
+        """获取指定文件的信息"""
+        for file in self.file_paths:
+            if file["path"] == path:
+                return file
+        return None
+
+def main(page: ft.Page):
+    # 创建文件路径列表对象
+    file_list = FilePathList()
+
+    # 创建一个 ListView 控件用于显示文件列表
+    list_view = ft.ListView(expand=True, spacing=10)
+
+    # 定义文件类型的图标映射
+    icon_mapping = {
+        ".txt": ft.icons.TEXT_FORMAT,
+        ".pdf": ft.icons.PICTURE_AS_PDF,
+        ".png": ft.icons.IMAGE,
+        ".docx": ft.icons.DOCUMENT_SCANNER
+    }
+
+    # 用于存储当前选中的项索引
+    selected_index = None
+
+    # 用于双击检测的变量
+    last_click_time = 0
+    double_click_threshold = 0.3  # 双击时间阈值（秒）
+
+    # 遍历路径列表，为每个文件创建一个 ListTile 控件
+    def update_list_view():
+        nonlocal selected_index
+        selected_index = None  # 重置选中索引
+        list_view.controls = [
+            ft.ListTile(
+                leading=ft.Icon(icon_mapping.get(os.path.splitext(file_name)[1].lower(), ft.icons.INSERT_DRIVE_FILE)),
+                title=ft.Text(file_name, color=ft.colors.BLUE),
+                subtitle=ft.Text(f"路径: {file['path']}  - 策略: {file['strategy']} - 参数: {file['param']}", color=ft.colors.BLUE),
+                on_click=lambda e, idx=i: handle_click(e, idx),
+                on_long_press=lambda e, idx=i: handle_long_press(e, idx)
+            )
+            for i, file in enumerate(file_list.file_paths)
+            for file_name in [os.path.basename(file["path"])]
+        ]
+        page.update()
+
+    def handle_click(e, idx):
+        nonlocal last_click_time, selected_index
+        current_time = time.time()
+        if current_time - last_click_time < double_click_threshold:
+            open_file_details(e, idx)
+        else:
+            selected_index = idx  # 更新选中索引
+        last_click_time = current_time
+
+    def handle_long_press(e, idx):
+        nonlocal selected_index
+        selected_index = idx  # 更新选中索引
+
+    def open_file_details(e, idx):
+        nonlocal current_file_path
+        current_file_path = file_list.file_paths[idx]["path"]
+        selected_file = file_list.get_file_info(current_file_path)
+        selected_checkbox_number = selected_file["strategy"]
+        selected_checkbox_value = selected_file["param"]
+
+        # 根据策略编号设置复选框状态
+        for i, (checkbox, textfield) in enumerate(checkboxes):
+            if i + 1 == selected_checkbox_number:
+                checkbox.value = True
+                if textfield:
+                    textfield.value = selected_checkbox_value
+                    textfield.disabled = False
+            else:
+                checkbox.value = False
+                if textfield:
+                    textfield.disabled = True
+
+        show_password_choices()
+
+    def toggle_file_encryption(e, path):
+        file_list.toggle_encryption(path)
+        go_back_to_main(e)  # 切换加密状态后返回主界面
+
+    def go_back_to_main(e):
+        page.clean()
+        page.add(button_row, list_view)
+        update_list_view()
+        page.update()
+
+    # 创建添加按钮
+    def add_file_path(e):
+        # 创建隐藏的主窗口
+        root = tk.Tk()
+        root.withdraw()
+        # 确保文件选择对话框置顶
+        root.attributes('-topmost', True)
+
+        # 弹出文件选择对话框
+        file_path = filedialog.askopenfilename(
+            title="选择文件",
+            filetypes=[("所有文件", "*.*"), ("文本文件", "*.txt"), ("图片文件", ("*.png", "*.jpg"))]
+        )
+        if file_path:  # 确保用户选择了文件
+            file_list.add_path(file_path)
+            update_list_view()
+            # 在文件选择确定后，打开复选框界面
+            current_file_path = file_path
+            show_password_choices()
+
+    # 创建删除按钮
+    def delete_selected_path(e):
+        nonlocal selected_index
+        if selected_index is not None:
+            file_path = file_list.file_paths[selected_index]["path"]
+            file_list.remove_path(file_path)
+            update_list_view()
+            selected_index = None  # 重置选中索引
+
+    delete_button = ft.ElevatedButton(
+        content=ft.Text(
+            "删除", 
+            size=20,
+            color=ft.colors.BLUE,
+            offset=ft.Offset(0, -0.1)
+        ),
+        width=120,
+        height=40,
+        style=ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=10),  # 设置圆角
+            bgcolor=ft.colors.WHITE,
+            color=ft.colors.BLUE
+        ),
+        on_click=delete_selected_path
+    )
+
+    # 创建添加按钮
+    add_button = ft.ElevatedButton(
+        content=ft.Text(
+            "+", 
+            size=60,
+            color=ft.colors.BLUE,
+            offset=ft.Offset(0, -0.1)
+        ),
+        width=80,
+        height=80,
+        style=ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=15),  # 设置圆角
+            bgcolor=ft.colors.WHITE,
+            color=ft.colors.BLUE
+        ),
+        on_click=add_file_path
+    )
+
+    # 将按钮和文件列表添加到页面
+    button_row = ft.Row(
+        controls=[
+            delete_button,
+            ft.Container(expand=True),  # 使用 expand 属性来分配空间
+            add_button,
+        ],
+        alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+    )
+    page.add(button_row, list_view)
+
+    # 初始更新列表视图
+    update_list_view()
+
+    # 定义两个变量来存储选中的复选框的编号和输入的参数
+    selected_checkbox_number = None
+    selected_checkbox_value = None  # 初始值应为 None
+
+    # 定义一个变量来存储当前文件路径
+    current_file_path = None
+
+    # 创建一个复选框和文本框的组合控件
+    def create_password_choice(label: str, hint_text: str = '', show_textfield: bool = True, number: int = 0):
+        checkbox = ft.Checkbox(label=label)
+        if show_textfield:
+            textfield = ft.TextField(hint_text=hint_text, width=200, height=40, border_color=ft.colors.GREY_600, disabled=True)
+        else:
+            textfield = None
+
+        def on_change(e):
+            nonlocal selected_checkbox_number, selected_checkbox_value
+            # 当复选框状态改变时，更新文本框的启用状态
+            if show_textfield:
+                textfield.disabled = not checkbox.value
+            # 清除其他复选框的选中状态
+            for cb, tf in checkboxes:
+                if cb != checkbox:
+                    cb.value = False
+                    if tf:
+                        tf.disabled = True
+            # 更新选中状态
+            if checkbox.value:
+                selected_checkbox_number = number
+                selected_checkbox_value = textfield.value if textfield and textfield.value else None
+            else:
+                selected_checkbox_number = None
+                selected_checkbox_value = None
+            page.update()
+
+        checkbox.on_change = on_change
+        if show_textfield:
+            return checkbox, textfield
+        else:
+            return checkbox, None
+
+    # 创建十二个复选框和文本框的组合
+    checkboxes = [
+        create_password_choice("Date×", '用户自定义实数', number=1),
+        create_password_choice("若Dow为奇数，则取Date的奇数位若Dow为偶数，则取Date的偶数位在末尾连接Dow", show_textfield=False, number=2),
+        create_password_choice("Hour×_________（用户自定义实数）", '用户自定义实数', number=3),
+        create_password_choice("若Hour为奇数，则取Date的奇数位若Hour为偶数，则取Date的偶数位在末尾连接Hour", '用户自定义实数', number=4),
+        create_password_choice("Hour×Dow在末尾连接Hour", show_textfield=False, number=5),
+        create_password_choice("判断（包含且只包含Hour个Month字符的任意字符串）", show_textfield=False, number=6),
+        create_password_choice("判断（包含且只包含_________（用户自定义实数）个Month字符的任意字符串）", '用户自定义实数', number=7),
+        create_password_choice("判断（包含且只包含Hour个_________（用户自定义1位字符）的任意字符串）", '用户自定义实数', number=8),
+        create_password_choice("判断（包含且只包含Hour个大写英文字母的任意字符串）", show_textfield=False, number=9),
+        create_password_choice("判断（包含且只包含_________（用户自定义实数）个大写英文字母的任意字符串）",'用户自定义实数', number=10),
+        create_password_choice("判断（密码中所有数字类字符加和=Hour（其余字符均不影响））", show_textfield=False, number=11),
+        create_password_choice("判断（密码中所有数字类字符加和=_________（用户自定义实数）（其余字符均不影响））", '用户自定义实数', number=12),
+    ]
+
+    # 将组合控件添加到页面
+    def show_password_choices():
+        page.clean()
+        for checkbox, textfield in checkboxes:
+            if textfield:
+                page.add(ft.Row(controls=[checkbox, textfield], alignment=ft.MainAxisAlignment.START))
+            else:
+                page.add(checkbox)
+        page.add(confirm_button)
+
+    # 添加一个确定按钮
+    def on_confirm_click(e):
+        nonlocal selected_checkbox_number, selected_checkbox_value
+        if selected_checkbox_number is not None:
+            selected_file = file_list.get_file_info(current_file_path)
+            if selected_file:
+                selected_file["strategy"] = selected_checkbox_number
+                selected_file["param"] = selected_checkbox_value
+            go_back_to_main(e)  # 返回主界面并更新列表
+        else:
+            page.add(ft.Text("请选择密码策略"))
+
+    confirm_button = ft.ElevatedButton("确定", on_click=on_confirm_click)
+
+# 运行应用
+ft.app(target=main)
