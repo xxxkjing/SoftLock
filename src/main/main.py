@@ -219,7 +219,7 @@ def create_bat_file():
 目前使用方法：
 
 创建一个文件夹（这一步只是方便管理软件，就像其它软件一样，最后我们的软件全部内容应该在一个文件夹中）
-下载password.exe文件与main.py到文件夹中
+下载password.exe文件与main.py到文件夹中（exe文件在项目主页面的release中下载）
 运行Python文件，选择一个txt文件确认加密，这一步是替代方法，之后会在管理端中
 双击exe运行
 注意到生成一个processing.bat文件，在成品中，创建bat文件会由管理端程序实现，现在暂时是这个替代方法，也不影响
