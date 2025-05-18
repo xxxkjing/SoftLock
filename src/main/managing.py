@@ -93,7 +93,6 @@ def main(page: ft.Page):
             controls=[
                 ft.Text(f"文件名: {file_name}", size=20),
                 ft.Text(f"文件路径: {file_path}", size=20),
-                ft.Text(f"加密状态: {encrypted}", size=20),
                 ft.Text(f"加密策略: {strategy}", size=20),
                 ft.Text(f"加密参数: {param}", size=20),
                 ft.ElevatedButton(
@@ -275,12 +274,19 @@ def main(page: ft.Page):
     # 确认按钮的点击事件
     def on_confirm_click(e, file_index):
         # 遍历复选框，找到被选中的策略和参数
+        selected_strategy = None
+        selected_param = None
         for i, (checkbox, textfield) in enumerate(checkboxes):
             if checkbox.value:
-                file_list.file_paths[file_index]["strategy"] = i + 1
+                selected_strategy = i + 1
                 if textfield and textfield.value:
-                    file_list.file_paths[file_index]["param"] = textfield.value
+                    selected_param = textfield.value
                 break
+
+        # 更新文件的策略和参数
+        file_list.file_paths[file_index]["strategy"] = selected_strategy
+        file_list.file_paths[file_index]["param"] = selected_param
+
         go_back_to_main(e)
 
 # 运行应用
