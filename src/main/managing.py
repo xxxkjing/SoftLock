@@ -24,15 +24,8 @@ class FilePathList:
                 file["encrypted"] = not file["encrypted"]
                 break
 
-    def get_file_info(self, path):
-        """获取指定文件的信息"""
-        for file in self.file_paths:
-            if file["path"] == path:
-                return file
-        return None
-
 def main(page: ft.Page):
-    # 创建文件路径列表对象
+    # 创建一个文件路径列表对象
     file_list = FilePathList()
 
     # 创建一个 ListView 控件用于显示文件列表
@@ -59,14 +52,16 @@ def main(page: ft.Page):
         selected_index = None  # 重置选中索引
         list_view.controls = [
             ft.ListTile(
-                leading=ft.Icon(icon_mapping.get(os.path.splitext(file_name)[1].lower(), ft.icons.INSERT_DRIVE_FILE)),
-                title=ft.Text(file_name, color=ft.colors.BLUE),
-                subtitle=ft.Text(f"路径: {file['path']}  - 策略: {file['strategy']} - 参数: {file['param']}", color=ft.colors.BLUE),
+                leading=ft.Icon(icon_mapping.get(os.path.splitext(file["path"])[1].lower(), ft.icons.INSERT_DRIVE_FILE)),
+                title=ft.Text(os.path.basename(file["path"]), color=ft.colors.BLUE),
+                subtitle=ft.Text(
+                    f"路径: {file['path']}  - 策略: {file['strategy']} - 参数: {file['param']}",
+                    color=ft.colors.BLUE
+                ),
                 on_click=lambda e, idx=i: handle_click(e, idx),
                 on_long_press=lambda e, idx=i: handle_long_press(e, idx)
             )
             for i, file in enumerate(file_list.file_paths)
-            for file_name in [os.path.basename(file["path"])]
         ]
         page.update()
 
@@ -74,7 +69,7 @@ def main(page: ft.Page):
         nonlocal last_click_time, selected_index
         current_time = time.time()
         if current_time - last_click_time < double_click_threshold:
-            open_file_details(e, idx)
+            open_file_details(idx)
         else:
             selected_index = idx  # 更新选中索引
         last_click_time = current_time
@@ -83,32 +78,45 @@ def main(page: ft.Page):
         nonlocal selected_index
         selected_index = idx  # 更新选中索引
 
-    def open_file_details(e, idx):
-        nonlocal current_file_path
-        current_file_path = file_list.file_paths[idx]["path"]
-        selected_file = file_list.get_file_info(current_file_path)
-        selected_checkbox_number = selected_file["strategy"]
-        selected_checkbox_value = selected_file["param"]
+    def open_file_details(file_index):
+        # 清空页面并显示文件详情界面
+        page.clean()
+        file = file_list.file_paths[file_index]
+        file_name = os.path.basename(file["path"])
+        file_path = file["path"]
+        strategy = file["strategy"]
+        param = file["param"]
+        encrypted = "已加密" if file["encrypted"] else "未加密"
 
-        # 根据策略编号设置复选框状态
-        for i, (checkbox, textfield) in enumerate(checkboxes):
-            if i + 1 == selected_checkbox_number:
-                checkbox.value = True
-                if textfield:
-                    textfield.value = selected_checkbox_value
-                    textfield.disabled = False
-            else:
-                checkbox.value = False
-                if textfield:
-                    textfield.disabled = True
-
-        show_password_choices()
-
-    def toggle_file_encryption(e, path):
-        file_list.toggle_encryption(path)
-        go_back_to_main(e)  # 切换加密状态后返回主界面
+        # 创建文件详情界面
+        details_view = ft.Column(
+            controls=[
+                ft.Text(f"文件名: {file_name}", size=20),
+                ft.Text(f"文件路径: {file_path}", size=20),
+                ft.Text(f"加密状态: {encrypted}", size=20),
+                ft.Text(f"加密策略: {strategy}", size=20),
+                ft.Text(f"加密参数: {param}", size=20),
+                ft.ElevatedButton(
+                    "修改加密",
+                    on_click=lambda e: show_password_choices(file_index, True),  # 传递预填充标志
+                    width=150,
+                    height=40
+                ),
+                ft.ElevatedButton(
+                    "返回",
+                    on_click=go_back_to_main,
+                    width=150,
+                    height=40
+                )
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+        )
+        page.add(details_view)
+        page.update()
 
     def go_back_to_main(e):
+        # 返回主界面并更新文件列表
         page.clean()
         page.add(button_row, list_view)
         update_list_view()
@@ -131,8 +139,7 @@ def main(page: ft.Page):
             file_list.add_path(file_path)
             update_list_view()
             # 在文件选择确定后，打开复选框界面
-            current_file_path = file_path
-            show_password_choices()
+            show_password_choices(len(file_list.file_paths) - 1, False)  # 传递预填充标志
 
     # 创建删除按钮
     def delete_selected_path(e):
@@ -192,13 +199,6 @@ def main(page: ft.Page):
     # 初始更新列表视图
     update_list_view()
 
-    # 定义两个变量来存储选中的复选框的编号和输入的参数
-    selected_checkbox_number = None
-    selected_checkbox_value = None  # 初始值应为 None
-
-    # 定义一个变量来存储当前文件路径
-    current_file_path = None
-
     # 创建一个复选框和文本框的组合控件
     def create_password_choice(label: str, hint_text: str = '', show_textfield: bool = True, number: int = 0):
         checkbox = ft.Checkbox(label=label)
@@ -208,7 +208,6 @@ def main(page: ft.Page):
             textfield = None
 
         def on_change(e):
-            nonlocal selected_checkbox_number, selected_checkbox_value
             # 当复选框状态改变时，更新文本框的启用状态
             if show_textfield:
                 textfield.disabled = not checkbox.value
@@ -218,13 +217,6 @@ def main(page: ft.Page):
                     cb.value = False
                     if tf:
                         tf.disabled = True
-            # 更新选中状态
-            if checkbox.value:
-                selected_checkbox_number = number
-                selected_checkbox_value = textfield.value if textfield and textfield.value else None
-            else:
-                selected_checkbox_number = None
-                selected_checkbox_value = None
             page.update()
 
         checkbox.on_change = on_change
@@ -249,29 +241,47 @@ def main(page: ft.Page):
         create_password_choice("判断（密码中所有数字类字符加和=_________（用户自定义实数）（其余字符均不影响））", '用户自定义实数', number=12),
     ]
 
-    # 将组合控件添加到页面
-    def show_password_choices():
+    # 显示密码策略选择界面
+    def show_password_choices(file_index, prefill=False):
+        # 清空页面并显示密码策略选择界面
         page.clean()
+        file = file_list.file_paths[file_index]
+        strategy = file["strategy"]
+        param = file["param"]
+
+        # 重置所有复选框和文本框的状态
+        for checkbox, textfield in checkboxes:
+            checkbox.value = False  # 重置复选框状态
+            if textfield:
+                textfield.value = ""  # 重置文本框内容
+                textfield.disabled = True  # 禁用文本框
+
+        # 如果是预填充模式，设置当前文件的策略和参数
+        if prefill and strategy:
+            checkboxes[strategy - 1][0].value = True  # 设置对应的复选框为选中状态
+            if checkboxes[strategy - 1][1]:  # 如果有文本框
+                checkboxes[strategy - 1][1].value = param  # 设置文本框的值
+                checkboxes[strategy - 1][1].disabled = False  # 启用文本框
+
+        # 添加复选框和文本框到页面
         for checkbox, textfield in checkboxes:
             if textfield:
                 page.add(ft.Row(controls=[checkbox, textfield], alignment=ft.MainAxisAlignment.START))
             else:
                 page.add(checkbox)
-        page.add(confirm_button)
+        page.add(ft.ElevatedButton("确定", on_click=lambda e: on_confirm_click(e, file_index)))
+        page.update()
 
-    # 添加一个确定按钮
-    def on_confirm_click(e):
-        nonlocal selected_checkbox_number, selected_checkbox_value
-        if selected_checkbox_number is not None:
-            selected_file = file_list.get_file_info(current_file_path)
-            if selected_file:
-                selected_file["strategy"] = selected_checkbox_number
-                selected_file["param"] = selected_checkbox_value
-            go_back_to_main(e)  # 返回主界面并更新列表
-        else:
-            page.add(ft.Text("请选择密码策略"))
-
-    confirm_button = ft.ElevatedButton("确定", on_click=on_confirm_click)
+    # 确认按钮的点击事件
+    def on_confirm_click(e, file_index):
+        # 遍历复选框，找到被选中的策略和参数
+        for i, (checkbox, textfield) in enumerate(checkboxes):
+            if checkbox.value:
+                file_list.file_paths[file_index]["strategy"] = i + 1
+                if textfield and textfield.value:
+                    file_list.file_paths[file_index]["param"] = textfield.value
+                break
+        go_back_to_main(e)
 
 # 运行应用
 ft.app(target=main)
