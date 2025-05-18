@@ -3,6 +3,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 import time
+import json
 
 class FilePathList:
     def __init__(self):
@@ -25,6 +26,56 @@ class FilePathList:
                 break
 
 def main(page: ft.Page):
+    # 获取当前脚本的绝对路径
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    temp_file = os.path.join(script_dir, "temp.json")  # 使用绝对路径
+
+    # 检查同目录中是否存在存密码的json文件
+    if not os.path.exists(temp_file):
+        # 如果不存在，弹出设置密码的界面
+        def set_password(e):
+            password = password_field.value
+            if password:  # 确保密码不为空
+                with open(temp_file, "w") as f:
+                    json.dump({"password": password}, f)  # 创建json文件存储密码
+                page.clean()  # 清空页面
+                main(page)  # 重新进入主界面
+            else:
+                show_snackbar("密码不能为空！")
+
+        password_field = ft.TextField(label="设置密码", password=True, can_reveal_password=True)
+        set_password_button = ft.ElevatedButton("确认", on_click=set_password)
+        page.add(ft.Column([password_field, set_password_button], alignment=ft.MainAxisAlignment.CENTER))
+        page.update()
+        return
+
+    def show_snackbar(message):
+        """显示提示信息"""
+        snack_bar = ft.SnackBar(
+            content=ft.Text(message),
+            bgcolor=ft.Colors.RED_300
+        )
+        page.open(snack_bar)
+        page.update()
+
+    # 如果存在json文件，进入安全界面
+    def check_password(e):
+        password = password_field.value
+        with open(temp_file, "r") as f:
+            stored_password = json.load(f)["password"]
+        if password == stored_password:
+            page.clean()  # 清空安全界面
+            main_original(page)  # 调用原主界面逻辑
+        else:
+            show_snackbar("密码错误！")
+
+    password_field = ft.TextField(label="输入密码", password=True, can_reveal_password=True)
+    check_password_button = ft.ElevatedButton("确认", on_click=check_password)
+    page.add(ft.Column([password_field, check_password_button], alignment=ft.MainAxisAlignment.CENTER))
+    page.update()
+
+# 将原主界面逻辑封装到一个函数中
+def main_original(page: ft.Page):
     # 创建一个文件路径列表对象
     file_list = FilePathList()
 
