@@ -131,12 +131,11 @@ class PasswordApp():
                 break
             
                 
+# 下方函数大多都是将来会移到管理端文件里的函数
 
 def create_page(page: ft.Page, target_file_path):
     app = PasswordApp(page, target_file_path)
 
-def create_page(page: ft.Page, target_file_path):
-    app = PasswordApp(page, target_file_path)
     
 
 def select_file():
@@ -174,41 +173,66 @@ def Trigger_password():
     if target_file_path:
         ft.app(target=lambda page: create_page(page, target_file_path))
 
+def bat(bat_filename):
+    """
+    创建一个 .bat 文件，并填充内容。
+    :param bat_filename: 要创建的 .bat 文件名
+    """
+    # 获取当前运行的 .exe 文件路径
+    exe_path = os.path.abspath(sys.argv[0])
+
+    # 创建 .bat 文件的内容
+    bat_content = f"""@echo off
+chcp 65001
+setlocal enabledelayedexpansion
+
+:: 检查是否有参数传入
+if "%~1"=="" (
+    echo No file path provided.
+    pause
+    exit /b
+)
+
+:: 获取完整的文件路径
+set "file_path=%~1"
+
+:: 调用打包后的 .exe 文件并传递完整的文件路径
+start /b "" "{exe_path}" "!file_path!"
+"""
+
+    # 写入 .bat 文件
+    with open(bat_filename, 'w', encoding='utf-8') as bat_file:
+        bat_file.write(bat_content)
+
+def create_bat_file():
+    # 获取当前运行的 .exe 文件所在的目录
+    exe_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+    bat_filename = os.path.join(exe_dir, "processing.bat")  # 动态生成 .bat 文件的路径
+
+    # 检查 .bat 文件是否存在
+    if  not os.path.exists(bat_filename):
+        bat(bat_filename)
+
     
 
 '''
 目前使用方法：
 
-select_and_decrypt()
-可以实现选择一个文件，并且永久取消对其的加密
-
-加密文件（管理端还没弄目前只能手动这样搞）：
-select_and_encrypt(这里填策略编号,这里填附加参数)
-可以实现选择一个文件，并且按照填好的加密方法加密它（目前选择txt或者docx文件应该会比较稳定）
-
-
-找到一个txt文件，选择打开方式，在电脑上查找，选择processing.bat文件
-注意目前processing文件中的Python解释器路径和main文件的路径暂时需要手动填写
+创建一个文件夹（这一步只是方便管理软件，就像其它软件一样，最后我们的软件全部内容应该在一个文件夹中）
+下载password.exe文件与main.py到文件夹中
+运行Python文件，选择一个txt文件确认加密，这一步是替代方法，之后会在管理端中
+双击exe运行
+注意到生成一个processing.bat文件，在成品中，创建bat文件会由管理端程序实现，现在暂时是这个替代方法，也不影响
+找到任意一个txt文件，右键打开方式，在电脑中查找文件，找到processing.bat，始终使用它打开txt
+即可实现双击txt自动运行程序了
 
 
-目前实现的重要功能：
-
-加密文件，使其访问时变为乱码
-加密的方式存储在本地的json文件中，可随时更改
-输入正确的密码即可解密文件，并自动打开文件
-关闭文件之后自动将文件再加密回去
-双击文件之后自动判断是否加密，如果加密弹出密码框，如果未加密则直接打开
-可应对文件路径里包含空格等特殊字符，其余文件都是用绝对路径
-
-为了尽量不修改注册表，所以目前采用此方法实现双击文件自动弹出密码框
-
-待解决的问题：
-双击文件之后会附带弹出cmd提示框，虽然不怎么影响使用，但影响体验，目前无法很好解决
-
+目前存在问题：
+暂时不清楚这版exe文件运行时为什么不会隐藏cmd提示符窗口，之前都可以的，不过这个问题不大，不影响使用
 
 '''
 
-def main():
+def trigger():
     target_file_path= sys.argv[1].replace('\\', '/')
     # 修改后会对所有txt影响，所以未加密的txt应该正常打开
     if datas.find_data(target_file_path)==None:
@@ -222,9 +246,19 @@ def main():
     else:
         ft.app(target=lambda page: create_page(page, target_file_path))
 
+
+
+def main():
+    exe_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+    bat_filename = os.path.join(exe_dir, "processing.bat")  # 动态生成 .bat 文件的路径
+    if  os.path.exists(bat_filename):
+        trigger()
+    else:
+        create_bat_file()
+
 if __name__ == '__main__':
-    #select_and_encrypt(12,7)
+    select_and_encrypt(12,7)
     #Trigger_password()
     #select_and_decrypt()
-    main()
-   
+    #create_bat_file()
+    #main()
