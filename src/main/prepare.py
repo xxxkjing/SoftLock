@@ -9,12 +9,11 @@ import flet as ft
 import tkinter as tk
 from tkinter import filedialog
 import sys
-import shlex
 
 
 
 notepad_path = os.path.join(os.environ.get('SYSTEMROOT', r"C:\Windows"), "System32", "notepad.exe") #记事本路径
-password_disturbance = 'BIWBGUIWBUI1' # lock的加密密钥是静态的，但我们的密码是动态的，所以取一串固定的随机字符来加密文，之后应该在管理端让用户设置
+password_disturbance = 'BIWBGUIWBUI1'
 
 
 class PasswordApp():
@@ -131,7 +130,7 @@ class PasswordApp():
                 break
             
                 
-# 下方函数大多都是将来会移到管理端文件里的函数
+# 下方函数大多都是临时函数
 
 def create_page(page: ft.Page, target_file_path):
     app = PasswordApp(page, target_file_path)
@@ -179,7 +178,7 @@ def bat(bat_filename):
     :param bat_filename: 要创建的 .bat 文件名
     """
     # 获取当前运行的 .exe 文件路径
-    exe_path = os.path.abspath(sys.argv[0])
+    exe_path = os.path.abspath(sys.executable)
 
     # 创建 .bat 文件的内容
     bat_content = f"""@echo off
@@ -206,31 +205,13 @@ start /b "" "{exe_path}" "!file_path!"
 
 def create_bat_file():
     # 获取当前运行的 .exe 文件所在的目录
-    exe_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+    exe_dir = os.path.dirname(sys.executable)
     bat_filename = os.path.join(exe_dir, "processing.bat")  # 动态生成 .bat 文件的路径
 
     # 检查 .bat 文件是否存在
     if  not os.path.exists(bat_filename):
         bat(bat_filename)
 
-    
-
-'''
-目前使用方法：
-
-创建一个文件夹（这一步只是方便管理软件，就像其它软件一样，最后我们的软件全部内容应该在一个文件夹中）
-下载password.exe文件与main.py到文件夹中（exe文件在项目主页面的release中下载）
-运行Python文件，选择一个txt文件确认加密，这一步是替代方法，之后会在管理端中
-双击exe运行
-注意到生成一个processing.bat文件，在成品中，创建bat文件会由管理端程序实现，现在暂时是这个替代方法，也不影响
-找到任意一个txt文件，右键打开方式，在电脑中查找文件，找到processing.bat，始终使用它打开txt
-即可实现双击txt自动运行程序了
-
-
-目前存在问题：
-暂时不清楚这版exe文件运行时为什么不会隐藏cmd提示符窗口，之前都可以的，不过这个问题不大，不影响使用
-
-'''
 
 def trigger():
     target_file_path= sys.argv[1].replace('\\', '/')
@@ -249,16 +230,14 @@ def trigger():
 
 
 def main():
-    exe_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+    exe_dir = os.path.dirname(sys.executable)
     bat_filename = os.path.join(exe_dir, "processing.bat")  # 动态生成 .bat 文件的路径
     if  os.path.exists(bat_filename):
         trigger()
     else:
         create_bat_file()
-
+        
 if __name__ == '__main__':
-    select_and_encrypt(12,7)
-    #Trigger_password()
-    #select_and_decrypt()
-    #create_bat_file()
-    #main()
+    main()
+    #input()
+          
