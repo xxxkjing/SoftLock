@@ -14,13 +14,14 @@ def get_input_password():
     return input_password
 
 # 检查密码是否正确的板块
-def check(input_password,password):
+def check(password,input_password):
     
     if password == input_password:
         return p_correct()
     else:
         return p_wrong()
-
+    
+    # return password
 
 class PasswordChecker:
     def __init__(self):
@@ -39,13 +40,12 @@ class PasswordChecker:
 
     def strategy(self,x,user_defined,entered):          
             if 1 <= x <= len(self.strategies):
-               print(entered)
                return self.strategies[x- 1](user_defined,entered)  # 调用对应的函数
 
 
     def strategy_1(self,user_defined,entered):
         # 日期码乘自定义实数
-        return check(int(self.date) * user_defined, entered)
+        return check(int(self.date) * user_defined, int(entered))
 
     def strategy_2(self,user_defined,entered):
         # 若Dow为奇数，则取Date的奇数位。若Dow为偶数，则取Date的偶数位。在末尾连接Dow
@@ -57,7 +57,7 @@ class PasswordChecker:
 
     def strategy_3(self,user_defined,entered):
         # Hour×_________（用户自定义实数）
-        return check(int(self.hour) * user_defined, entered)
+        return check(int(self.hour) * user_defined, int(entered))
 
     def strategy_4(self,user_defined,entered):
         # 若Hour为奇数，则取Date的奇数位.若Hour为偶数，则取Date的偶数位.在末尾连接Hour
@@ -69,7 +69,7 @@ class PasswordChecker:
 
     def strategy_5(self,user_defined,entered):
         # Hour×Dow
-        return check(int(self.hour) * self.dow, entered)
+        return check(int(self.hour) * self.dow, int(entered))
 
     def strategy_6(self,user_defined,entered):
         """
@@ -103,12 +103,3 @@ class PasswordChecker:
     def strategy_12(self,user_defined,entered):
         # 判断（密码中所有数字类字符加和=_________（用户自定义实数））
         return check(sum(int(char) for char in entered if char.isdigit()), user_defined)
-
-    '''
-    剩下的第三类，也就是界面提示类的动态策略，暂未实现
-    '''
-
-
-
-
-
