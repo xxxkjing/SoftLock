@@ -1,4 +1,3 @@
-#原managing文件
 import flet as ft
 import os
 import tkinter as tk
@@ -238,7 +237,7 @@ def main_original(page: ft.Page):
         selected_index = idx  # 更新选中索引
 
     def open_file_details(file_index):
-    # 清空页面并显示文件详情界面
+        # 清空页面并显示文件详情界面
         page.clean()
         file = file_list.file_paths[file_index]
         file_name = os.path.basename(file["file_path"])
@@ -247,27 +246,31 @@ def main_original(page: ft.Page):
         param = file["additional_params"]
 
         # 创建文件详情界面
-        details_view = ft.Column(
-            controls=[
-                ft.Text(f"文件名: {file_name}", size=20),
-                ft.Text(f"文件路径: {file_path}", size=20),
-                ft.Text(f"加密策略: {strategy}", size=20),
-                ft.Text(f"加密参数: {param}", size=20),  # 确保 param 是数字类型
-                ft.ElevatedButton(
-                    "修改加密",
-                    on_click=lambda e: show_password_choices(file_index, True),  # 传递预填充标志
-                    width=150,
-                    height=40
-                ),
-                ft.ElevatedButton(
-                    "返回",
-                    on_click=go_back_to_main,
-                    width=150,
-                    height=40
-                )
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+        details_view = ft.Container(
+            content = ft.Column(
+                controls=[
+                    ft.Text(f"文件名: {file_name}", size=20),
+                    ft.Text(f"文件路径: {file_path}", size=20),
+                    ft.Text(f"加密策略: {strategy}", size=20),
+                    ft.Text(f"加密参数: {param}", size=20),
+                    ft.ElevatedButton(
+                        content=ft.Text("修改加密",size=18),
+                        on_click=lambda e: show_password_choices(file_index, True),  # 传递预填充标志
+                        width=150,
+                        height=50
+                    ),
+                    ft.ElevatedButton(
+                        content=ft.Text("返回",size=18),
+                        on_click=go_back_to_main,
+                        width=150,
+                        height=50
+                    )
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER
+            ),
+            alignment=ft.alignment.center
+
         )
         page.add(details_view)
         page.update()
@@ -308,18 +311,17 @@ def main_original(page: ft.Page):
             selected_index = None  # 重置选中索引
 
     delete_button = ft.ElevatedButton(
-        content=ft.Text(
-            "删除", 
-            size=20,
-            color=ft.colors.BLUE,
-            offset=ft.Offset(0, -0.1)
+        content=ft.Icon(
+            name=ft.icons.DELETE,
+            size=60,
+            color=ft.colors.WHITE,
         ),
-        width=120,
-        height=40,
+        width=80,
+        height=80,
         style=ft.ButtonStyle(
             shape=ft.RoundedRectangleBorder(radius=10),  # 设置圆角
-            bgcolor=ft.colors.WHITE,
-            color=ft.colors.BLUE
+            bgcolor=ft.colors.RED,
+            color=ft.colors.WHITE
         ),
         on_click=delete_selected_path
     )
@@ -384,18 +386,18 @@ def main_original(page: ft.Page):
 
     # 创建十二个复选框和文本框的组合
     checkboxes = [
-        create_password_choice("Date×", '用户自定义实数', number=1),
-        create_password_choice("若Dow为奇数，则取Date的奇数位若Dow为偶数，则取Date的偶数位在末尾连接Dow", show_textfield=False, number=2),
-        create_password_choice("Hour×_________（用户自定义实数）", '用户自定义实数', number=3),
-        create_password_choice("若Hour为奇数，则取Date的奇数位若Hour为偶数，则取Date的偶数位在末尾连接Hour", '用户自定义实数', number=4),
-        create_password_choice("Hour×Dow在末尾连接Hour", show_textfield=False, number=5),
-        create_password_choice("判断（包含且只包含Hour个Month字符的任意字符串）", show_textfield=False, number=6),
-        create_password_choice("判断（包含且只包含_________（用户自定义实数）个Month字符的任意字符串）", '用户自定义实数', number=7),
-        create_password_choice("判断（包含且只包含Hour个_________（用户自定义1位字符）的任意字符串）", '用户自定义实数', number=8),
-        create_password_choice("判断（包含且只包含Hour个大写英文字母的任意字符串）", show_textfield=False, number=9),
-        create_password_choice("判断（包含且只包含_________（用户自定义实数）个大写英文字母的任意字符串）",'用户自定义实数', number=10),
-        create_password_choice("判断（密码中所有数字类字符加和=Hour（其余字符均不影响））", show_textfield=False, number=11),
-        create_password_choice("判断（密码中所有数字类字符加和=_________（用户自定义实数）（其余字符均不影响））", '用户自定义实数', number=12),
+        create_password_choice("  日期码  ×", '用户自定义实数', number=1),
+        create_password_choice("若  星期X  为奇数，则取  日期码  的奇数位；若  星期  为偶数，则取  日期码  的偶数位在末尾连接  星期X", show_textfield=False, number=2),
+        create_password_choice("  小时  ×_________", '用户自定义实数', number=3),
+        create_password_choice("若  小时  为奇数，则取  日期码  的奇数位；若  小时  为偶数，则取  日期码  的偶数位在末尾连接  小时", show_textfield=False, number=4),
+        create_password_choice("  日期码  ×  星期X  在末尾连接  小时  ", show_textfield=False, number=5),
+        create_password_choice("判断（包含且只包含  小时  个  月份  字符的任意字符串）", show_textfield=False, number=6),
+        create_password_choice("判断（包含且只包含_________个  月份  字符的任意字符串）", '用户自定义实数', number=7),
+        create_password_choice("判断（包含且只包含  小时  个_________（1位字符）的任意字符串）", '用户自定义实数', number=8),
+        create_password_choice("判断（包含且只包含  小时  个大写英文字母的任意字符串）", show_textfield=False, number=9),
+        create_password_choice("判断（包含且只包含_________个大写英文字母的任意字符串）",'用户自定义实数', number=10),
+        create_password_choice("判断（密码中所有数字类字符加和=  小时  （其余字符均不影响））", show_textfield=False, number=11),
+        create_password_choice("判断（密码中所有数字类字符加和=_________（其余字符均不影响））", '用户自定义实数', number=12),
     ]
 
     # 显示密码策略选择界面
@@ -409,16 +411,18 @@ def main_original(page: ft.Page):
         # 添加文字说明
         instruction_text = ft.Text(
             "前置定义变量：\n"
-            "Date=8位的年+月+日\n"
-            "Dow=当日的星期X\n"
-            "Hour=取按24小时计时法现在处于X时\n"
-            "Month=当前x月，将X转化为16进制，如X=10=a，X=12=C",
+            "日期码 = 8位的年+月+日\n"
+            "星期X = 当日的星期X\n"
+            "小时 =  取按24小时计时法现在处于X时\n"
+            "月份 = 当前xxx月，将xxx转化为16进制，如xxx=10=a，xxx=12=C",
             size=20,
             color=ft.colors.BLACK,
             weight=ft.FontWeight.BOLD,
-            text_align=ft.TextAlign.CENTER
+            text_align=ft.TextAlign.START,
+            font_family="Microsoft YaHei"
         )
         page.add(instruction_text)  # 将文字说明添加到页面
+        page.scroll = ft.ScrollMode.AUTO
 
         # 重置所有复选框和文本框的状态
         for checkbox, textfield in checkboxes:
@@ -453,7 +457,7 @@ def main_original(page: ft.Page):
                 selected_strategy = i + 1
                 if textfield and textfield.value:
                     try:
-                        selected_param = int(textfield.value)  # 修改：将字符串转换为数字
+                        selected_param = int(textfield.value)  
                     except ValueError:
                         show_snackbar("请输入有效的数字作为参数！")
                         return
