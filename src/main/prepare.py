@@ -97,8 +97,7 @@ class PasswordApp():
                 self.page.window.destroy()
                 self.encrypt_after_close(self.target_file_path, password_disturbance)
             else:
-                #self._show_snackbar("密码错误！")
-                self._show_snackbar(checker.strategy(datas.find_data(self.target_file_path)["strategy_id"],datas.find_data(self.target_file_path)["additional_params"],self.text_input.value))
+                self._show_snackbar("密码错误！")
             self.text_input.value = ""
             self.page.update()
         else:
@@ -240,3 +239,5 @@ def main():
         
 if __name__ == '__main__':
     main()
+
+          
